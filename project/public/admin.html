@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Online Voting System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-header {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .admin-nav {
+            background: white;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+        }
+        
+        .admin-nav ul {
+            list-style: none;
+            display: flex;
+            margin: 0;
+            padding: 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .admin-nav li {
+            margin: 0;
+        }
+        
+        .admin-nav a {
+            display: block;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            color: var(--dark-gray);
+            font-weight: 600;
+            transition: var(--transition);
+            border-bottom: 3px solid transparent;
+        }
+        
+        .admin-nav a:hover,
+        .admin-nav a.active {
+            color: #dc3545;
+            border-bottom-color: #dc3545;
+            background: rgba(220, 53, 69, 0.1);
+        }
+        
+        .admin-section {
+            display: none;
+        }
+        
+        .admin-section.active {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--saffron);
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--saffron);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-label {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .election-control {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+        
+        .status-active {
+            background: rgba(19, 136, 8, 0.1);
+            color: var(--green);
+            border: 2px solid var(--green);
+        }
+        
+        .status-inactive {
+            background: rgba(220, 53, 69, 0.1);
+            color: #dc3545;
+            border: 2px solid #dc3545;
+        }
+        
+        .candidate-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .candidate-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            transition: var(--transition);
+        }
+        
+        .candidate-item:hover {
+            background: var(--light-gray);
+        }
+        
+        .candidate-item:last-child {
+            border-bottom: none;
+        }
+        
+        .candidate-symbol {
+            font-size: 2rem;
+            margin-right: 1rem;
+            width: 50px;
+            text-align: center;
+        }
+        
+        .candidate-info {
+            flex: 1;
+        }
+        
+        .candidate-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .candidate-party {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+        
+        .candidate-votes {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--saffron);
+            margin-right: 1rem;
+        }
+        
+        .delete-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        
+        .delete-btn:hover {
+            background: #c82333;
+            transform: scale(1.05);
+        }
+        
+        .add-candidate-form {
+            background: var(--light-gray);
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 100px auto;
+            gap: 1rem;
+            align-items: end;
+        }
+        
+        .login-container {
+            min-height: 60vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .login-form {
+            background: white;
+            padding: 3rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-hover);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-nav ul {
+                flex-direction: column;
+            }
+            
+            .admin-nav a {
+                text-align: center;
+                border-bottom: 1px solid #e9ecef;
+                border-left: 3px solid transparent;
+            }
+            
+            .admin-nav a:hover,
+            .admin-nav a.active {
+                border-left-color: #dc3545;
+                border-bottom-color: #e9ecef;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Section -->
+    <section id="loginSection" class="container login-container">
+        <div class="login-form">
+            <h2 style="text-align: center; margin-bottom: 2rem; color: #dc3545;">
+                🔐 Admin Login
+            </h2>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input type="text" id="username" class="form-input" value="admin" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input type="password" id="password" class="form-input" value="admin123" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%; background: #dc3545;" id="loginBtn">
+                    Login to Dashboard
+                </button>
+                
+                <div class="error-message" id="loginError"></div>
+                
+                <div style="text-align: center; margin-top: 1.5rem;">
+                    <small style="color: var(--text-light);">
+                        Demo credentials: admin / admin123
+                    </small>
+                </div>
+            </form>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="/" style="color: var(--saffron);">← Back to Home</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Dashboard -->
+    <div id="adminDashboard" style="display: none;">
+        <!-- Header -->
+        <header class="admin-header">
+            <div class="container">
+                <h1>⚙️ Admin Dashboard</h1>
+                <p>Election Management System</p>
+                <button class="btn btn-secondary" onclick="logout()" style="margin-top: 1rem;">
+                    Logout
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation -->
+        <nav class="admin-nav">
+            <div class="container">
+                <ul>
+                    <li><a href="#" class="nav-tab active" data-section="overview">📊 Overview</a></li>
+                    <li><a href="#" class="nav-tab" data-section="election">🗳️ Election Control</a></li>
+                    <li><a href="#" class="nav-tab" data-section="candidates">👥 Candidates</a></li>
+                    <li><a href="#" class="nav-tab" data-section="voters">📋 Voters</a></li>
+                    <li><a href="#" class="nav-tab" data-section="results">📈 Results</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- Overview Section -->
+            <section id="overview" class="admin-section active">
+                <h2 style="margin-bottom: 2rem;">Dashboard Overview</h2>
+                
+                <div class="stats-grid" id="statsGrid">
+                    <!-- Stats will be loaded here -->
+                </div>
+                
+                <div class="election-control">
+                    <h3>Quick Actions</h3>
+                    <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 1rem;">
+                        <button class="btn btn-primary" onclick="initializeDefaultParties()">
+                            Initialize Default Parties
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('election')">
+                            Election Control
+                        </button>
+                        <button class="btn" style="background: var(--green); color: white;" onclick="showSection('results')">
+                            View Live Results
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Election Control Section -->
+            <section id="election" class="admin-section">
+                <h2 style="margin-bottom: 2rem;">Election Control</h2>
+                
+                <div class="election-control">
+                    <h3>Election Status</h3>
+                    <div class="status-indicator" id="electionStatus">
+                        🔴 Election Inactive
+                    </div>
+                    <div style="margin: 1.5rem 0;">
+                        <button class="btn btn-primary" id="toggleElectionBtn" onclick="toggleElection()">
+                            Start Election
+                        </button>
+                    </div>
+                    <div id="electionInfo" style="color: var(--text-light); font-size: 0.9rem;">
+                        <!-- Election info will be displayed here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Candidates Section -->
+            <section id="candidates" class="admin-section">
+                <h2 style="margin-bottom: 2rem;">Candidate Management</h2>
+                
+                <!-- Add Candidate Form -->
+                <div class="add-candidate-form">
+                    <h3 style="margin-bottom: 1rem;">Add New Candidate</h3>
+                    <form id="addCandidateForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">Candidate Name</label>
+                                <input type="text" id="candidateName" class="form-input" placeholder="Enter name" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Party Name</label>
+                                <input type="text" id="candidateParty" class="form-input" placeholder="Enter party" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Symbol</label>
+                                <input type="text" id="candidateSymbol" class="form-input" placeholder="🎯" maxlength="2" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Add Candidate</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Candidates List -->
+                <div class="candidate-list" id="candidatesList">
+                    <!-- Candidates will be loaded here -->
+                </div>
+            </section>
+
+            <!-- Voters Section -->
+            <section id="voters" class="admin-section">
+                <h2 style="margin-bottom: 2rem;">Voter Management</h2>
+                
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow);">
+                    <div style="text-align: center; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">👥</div>
+                        <h3>Registered Voters</h3>
+                        <p>Total registered voters will be displayed here</p>
+                        <div class="stat-number" id="totalVoters">0</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results" class="admin-section">
+                <h2 style="margin-bottom: 2rem;">Live Election Results</h2>
+                
+                <div id="resultsContainer">
+                    <!-- Results will be loaded here -->
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let authToken = null;
+        let electionActive = false;
+
+        // Login handling
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            
+            Utils.showLoader(loginBtn);
+            loginBtn.textContent = 'Logging in...';
+            
+            try {
+                const response = await fetch('/api/auth/admin/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    authToken = result.token;
+                    localStorage.setItem('adminToken', authToken);
+                    showDashboard();
+                } else {
+                    document.getElementById('loginError').textContent = result.message;
+                }
+                
+            } catch (error) {
+                document.getElementById('loginError').textContent = 'Login failed: ' + error.message;
+            } finally {
+                Utils.hideLoader(loginBtn);
+                loginBtn.textContent = 'Login to Dashboard';
+            }
+        });
+
+        function showDashboard() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('adminDashboard').style.display = 'block';
+            loadDashboardData();
+        }
+
+        function logout() {
+            authToken = null;
+            localStorage.removeItem('adminToken');
+            document.getElementById('loginSection').style.display = 'flex';
+            document.getElementById('adminDashboard').style.display = 'none';
+        }
+
+        // Check for stored token on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const storedToken = localStorage.getItem('adminToken');
+            if (storedToken) {
+                authToken = storedToken;
+                showDashboard();
+            }
+            
+            // Setup navigation
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const section = this.dataset.section;
+                    showSection(section);
+                });
+            });
+        });
+
+        function showSection(sectionName) {
+            // Update navigation
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelector(`[data-section="${sectionName}"]`).classList.add('active');
+            
+            // Show section
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById(sectionName).classList.add('active');
+            
+            // Load section data
+            switch(sectionName) {
+                case 'overview':
+                    loadStats();
+                    break;
+                case 'election':
+                    loadElectionStatus();
+                    break;
+                case 'candidates':
+                    loadCandidates();
+                    break;
+                case 'results':
+                    loadResults();
+                    break;
+            }
+        }
+
+        async function loadDashboardData() {
+            await loadStats();
+            await loadElectionStatus();
+            await loadCandidates();
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    headers: {
+                        'x-auth-token': authToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayStats(result.stats);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        function displayStats(stats) {
+            const statsGrid = document.getElementById('statsGrid');
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <span class="stat-number">${stats.totalVoters}</span>
+                    <span class="stat-label">Total Voters</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${stats.totalCandidates}</span>
+                    <span class="stat-label">Candidates</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${stats.totalVotes}</span>
+                    <span class="stat-label">Votes Cast</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-number">${stats.voterTurnout}%</span>
+                    <span class="stat-label">Voter Turnout</span>
+                </div>
+            `;
+            
+            // Update voters count in voters section
+            document.getElementById('totalVoters').textContent = stats.totalVoters;
+        }
+
+        async function loadElectionStatus() {
+            try {
+                const response = await fetch('/api/admin/election', {
+                    headers: {
+                        'x-auth-token': authToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    electionActive = result.election.isActive;
+                    updateElectionStatus(result.election);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load election status:', error);
+            }
+        }
+
+        function updateElectionStatus(election) {
+            const statusEl = document.getElementById('electionStatus');
+            const toggleBtn = document.getElementById('toggleElectionBtn');
+            const infoEl = document.getElementById('electionInfo');
+            
+            if (election.isActive) {
+                statusEl.className = 'status-indicator status-active';
+                statusEl.textContent = '🟢 Election Active';
+                toggleBtn.textContent = 'Stop Election';
+                toggleBtn.className = 'btn';
+                toggleBtn.style.background = '#dc3545';
+                toggleBtn.style.color = 'white';
+                infoEl.textContent = 'Election is currently active. Voters can cast their votes.';
+            } else {
+                statusEl.className = 'status-indicator status-inactive';
+                statusEl.textContent = '🔴 Election Inactive';
+                toggleBtn.textContent = 'Start Election';
+                toggleBtn.className = 'btn btn-primary';
+                toggleBtn.style.background = '';
+                toggleBtn.style.color = '';
+                infoEl.textContent = 'Election is currently stopped. Start the election to allow voting.';
+            }
+        }
+
+        async function toggleElection() {
+            const toggleBtn = document.getElementById('toggleElectionBtn');
+            Utils.showLoader(toggleBtn);
+            
+            try {
+                const response = await fetch('/api/admin/election/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'x-auth-token': authToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadElectionStatus();
+                    alert(result.message);
+                } else {
+                    alert('Failed to toggle election: ' + result.message);
+                }
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            } finally {
+                Utils.hideLoader(toggleBtn);
+            }
+        }
+
+        async function initializeDefaultParties() {
+            try {
+                const response = await fetch('/api/admin/init-parties', {
+                    method: 'POST',
+                    headers: {
+                        'x-auth-token': authToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('Default parties initialized successfully!');
+                    await loadCandidates();
+                    await loadStats();
+                } else {
+                    alert('Failed to initialize parties: ' + result.message);
+                }
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadCandidates() {
+            try {
+                const response = await fetch('/api/admin/candidates', {
+                    headers: {
+                        'x-auth-token': authToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayCandidates(result.candidates);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load candidates:', error);
+            }
+        }
+
+        function displayCandidates(candidates) {
+            const candidatesList = document.getElementById('candidatesList');
+            
+            if (candidates.length === 0) {
+                candidatesList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+                        <p>No candidates added yet. Add candidates to start the election.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            candidatesList.innerHTML = candidates.map(candidate => `
+                <div class="candidate-item">
+                    <div class="candidate-symbol">${candidate.symbol}</div>
+                    <div class="candidate-info">
+                        <div class="candidate-name">${candidate.name}</div>
+                        <div class="candidate-party">${candidate.party}</div>
+                    </div>
+                    <div class="candidate-votes">${candidate.votes} votes</div>
+                    <button class="delete-btn" onclick="deleteCandidate('${candidate.id || candidate._id}')">
+                        Delete
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Add candidate form
+        document.getElementById('addCandidateForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('candidateName').value.trim(),
+                party: document.getElementById('candidateParty').value.trim(),
+                symbol: document.getElementById('candidateSymbol').value.trim()
+            };
+            
+            try {
+                const response = await fetch('/api/admin/candidates', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': authToken
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Reset form
+                    this.reset();
+                    // Reload candidates
+                    await loadCandidates();
+                    await loadStats();
+                    alert('Candidate added successfully!');
+                } else {
+                    alert('Failed to add candidate: ' + result.message);
+                }
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+
+        async function deleteCandidate(candidateId) {
+            if (!confirm('Are you sure you want to delete this candidate?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/candidates/${candidateId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'x-auth-token': authToken
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    await loadCandidates();
+                    await loadStats();
+                    alert('Candidate deleted successfully!');
+                } else {
+                    alert('Failed to delete candidate: ' + result.message);
+                }
+                
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function loadResults() {
+            try {
+                const response = await fetch('/api/voting/results');
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayResults(result.results, result.totalVotes);
+                }
+                
+            } catch (error) {
+                console.error('Failed to load results:', error);
+            }
+        }
+
+        function displayResults(results, totalVotes) {
+            const resultsContainer = document.getElementById('resultsContainer');
+            
+            if (results.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 3rem; background: white; border-radius: 12px; box-shadow: var(--shadow);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📊</div>
+                        <h3>No votes cast yet</h3>
+                        <p style="color: var(--text-light);">Results will appear here once voting begins.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultsContainer.innerHTML = `
+                <div style="background: white; padding: 2rem; border-radius: 12px; box-shadow: var(--shadow); margin-bottom: 2rem;">
+                    <h3 style="text-align: center; margin-bottom: 2rem;">Live Election Results</h3>
+                    <div style="text-align: center; margin-bottom: 2rem;">
+                        <span style="font-size: 2rem; font-weight: 800; color: var(--saffron);">${totalVotes}</span>
+                        <span style="color: var(--text-light); margin-left: 0.5rem;">Total Votes</span>
+                    </div>
+                    ${results.map((candidate, index) => `
+                        <div style="margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                                <div style="display: flex; align-items: center;">
+                                    <span style="font-size: 1.5rem; margin-right: 1rem;">${candidate.symbol}</span>
+                                    <div>
+                                        <div style="font-weight: 600;">${candidate.name}</div>
+                                        <div style="font-size: 0.9rem; color: var(--text-light);">${candidate.party}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--saffron);">${candidate.votes} votes</div>
+                                    <div style="font-size: 0.9rem; color: var(--text-light);">${candidate.percentage}%</div>
+                                </div>
+                            </div>
+                            <div style="width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; background: linear-gradient(90deg, var(--saffron), var(--green)); width: ${candidate.percentage}%; transition: width 0.5s ease;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

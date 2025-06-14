@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cast Your Vote - Online Voting System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--navy), #000066);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .voting-step {
+            display: none;
+            animation: fadeInUp 0.5s ease;
+        }
+        
+        .voting-step.active {
+            display: block;
+        }
+        
+        .candidate-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+        
+        .candidate-card {
+            background: white;
+            border: 3px solid transparent;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+        }
+        
+        .candidate-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--saffron);
+        }
+        
+        .candidate-card.selected {
+            border-color: var(--green);
+            background: linear-gradient(135deg, rgba(19, 136, 8, 0.1), rgba(19, 136, 8, 0.05));
+        }
+        
+        .candidate-symbol {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+        
+        .candidate-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--dark-gray);
+            margin-bottom: 0.5rem;
+        }
+        
+        .candidate-party {
+            font-size: 1rem;
+            color: var(--text-light);
+            margin-bottom: 1rem;
+        }
+        
+        .vote-button {
+            background: var(--green);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 100%;
+        }
+        
+        .vote-button:hover {
+            background: #0f6b06;
+            transform: scale(1.05);
+        }
+        
+        .face-verification {
+            background: var(--light-gray);
+            padding: 2rem;
+            border-radius: 12px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .verification-camera {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border: 2px solid var(--saffron);
+            border-radius: 8px;
+            margin: 1rem auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+        }
+        
+        .verification-camera video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        
+        .election-status {
+            background: var(--light-gray);
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            margin: 2rem 0;
+        }
+        
+        .status-active {
+            background: linear-gradient(135deg, rgba(19, 136, 8, 0.1), rgba(19, 136, 8, 0.05));
+            border: 2px solid var(--green);
+        }
+        
+        .status-inactive {
+            background: linear-gradient(135deg, rgba(220, 53, 69, 0.1), rgba(220, 53, 69, 0.05));
+            border: 2px solid #dc3545;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 2rem 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--saffron), var(--green));
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>🗳️ Cast Your Vote</h1>
+            <p>Secure voting with Face ID verification</p>
+            <a href="/" class="btn btn-secondary" style="margin-top: 1rem;">← Back to Home</a>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="container">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+        </div>
+    </div>
+
+    <!-- Step 1: Voter Verification -->
+    <section class="container voting-step active" id="voterVerification" style="padding: 2rem 0;">
+        <div class="form-container">
+            <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--navy);">
+                Voter Verification
+            </h2>
+            
+            <form id="verificationForm">
+                <div class="form-group">
+                    <label class="form-label" for="voterAadhaar">Enter Your Aadhaar Number</label>
+                    <input 
+                        type="text" 
+                        id="voterAadhaar" 
+                        class="form-input" 
+                        placeholder="XXXX XXXX XXXX"
+                        maxlength="14"
+                        required
+                    >
+                    <div class="error-message" id="aadhaarError"></div>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="verifyBtn">
+                    Verify Identity
+                </button>
+            </form>
+            
+            <div style="text-align: center; margin-top: 2rem;">
+                <p style="color: var(--text-light);">
+                    Don't have a voter registration? 
+                    <a href="/voter" style="color: var(--saffron);">Register here</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 2: Election Status -->
+    <section class="container voting-step" id="electionStatus" style="padding: 2rem 0;">
+        <div class="election-status" id="electionStatusCard">
+            <h2 style="margin-bottom: 1rem;">Election Status</h2>
+            <div id="electionInfo">
+                <!-- Election info will be loaded here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 3: Face Verification -->
+    <section class="container voting-step" id="faceVerificationStep" style="padding: 2rem 0;">
+        <div class="face-verification">
+            <h2 style="margin-bottom: 1rem; color: var(--navy);">Face ID Verification</h2>
+            <p style="margin-bottom: 1.5rem; color: var(--text-light);">
+                Please look directly at the camera for face verification
+            </p>
+            
+            <div class="verification-camera" id="verificationCamera">
+                <div id="cameraPlaceholder">
+                    <div style="text-align: center; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                        <p>Click "Start Verification" to begin face matching</p>
+                    </div>
+                </div>
+                <video id="verificationVideo" autoplay playsinline style="display: none;"></video>
+                <canvas id="verificationCanvas" style="display: none;"></canvas>
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                <button class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+                <button class="btn btn-primary" id="startVerificationBtn" onclick="startFaceVerification()">
+                    🔍 Start Verification
+                </button>
+                <button class="btn btn-primary" id="verifyFaceBtn" onclick="verifyFace()" style="display: none;">
+                    ✅ Verify Face
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Step 4: Ballot -->
+    <section class="container voting-step" id="ballotStep" style="padding: 2rem 0;">
+        <div style="text-align: center; margin-bottom: 2rem;">
+            <h2 style="color: var(--navy); margin-bottom: 0.5rem;">Choose Your Candidate</h2>
+            <p style="color: var(--text-light);">Click on a candidate to select, then click "Cast Vote"</p>
+        </div>
+        
+        <div class="candidate-grid" id="candidateGrid">
+            <!-- Candidates will be loaded here -->
+        </div>
+        
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 2rem;">
+            <button class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+            <button class="btn btn-primary" id="castVoteBtn" onclick="castVote()" disabled>
+                🗳️ Cast Your Vote
+            </button>
+        </div>
+    </section>
+
+    <!-- Step 5: Confirmation -->
+    <section class="container voting-step" id="confirmationStep" style="padding: 2rem 0;">
+        <div class="form-container" style="text-align: center;">
+            <div style="font-size: 4rem; color: var(--green); margin-bottom: 1rem;">✅</div>
+            <h2 style="color: var(--green); margin-bottom: 1rem;">Vote Cast Successfully!</h2>
+            <p style="margin-bottom: 2rem; color: var(--text-light);">
+                Thank you for participating in the democratic process. Your vote has been recorded securely.
+            </p>
+            
+            <div id="voteConfirmation" style="background: var(--light-gray); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+                <!-- Vote confirmation details -->
+            </div>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a href="/" class="btn btn-secondary">Return Home</a>
+                <a href="/results" class="btn btn-primary">View Results</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="script.js"></script>
+    <script>
+        let currentStep = 1;
+        let voterData = null;
+        let selectedCandidate = null;
+        let candidates = [];
+        let verificationStream = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            
+            // Format Aadhaar input
+            document.getElementById('voterAadhaar').addEventListener('input', function(e) {
+                e.target.value = Utils.formatAadhaar(e.target.value);
+            });
+        });
+
+        // Voter verification
+        document.getElementById('verificationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const aadhaar = document.getElementById('voterAadhaar').value.trim();
+            const verifyBtn = document.getElementById('verifyBtn');
+            
+            if (!Utils.validateAadhaar(aadhaar)) {
+                document.getElementById('aadhaarError').textContent = 'Please enter valid Aadhaar number';
+                return;
+            }
+            
+            Utils.showLoader(verifyBtn);
+            verifyBtn.textContent = 'Verifying...';
+            
+            try {
+                const response = await fetch('/api/voter/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ aadhaar })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    voterData = result.voter;
+                    await checkElectionStatus();
+                    goToStep(2);
+                } else {
+                    document.getElementById('aadhaarError').textContent = result.message;
+                }
+                
+            } catch (error) {
+                document.getElementById('aadhaarError').textContent = 'Verification failed: ' + error.message;
+            } finally {
+                Utils.hideLoader(verifyBtn);
+                verifyBtn.textContent = 'Verify Identity';
+            }
+        });
+
+        async function checkElectionStatus() {
+            try {
+                const response = await fetch('/api/voting/election');
+                const result = await response.json();
+                
+                if (result.success) {
+                    candidates = result.candidates;
+                    displayElectionStatus(result.election, true);
+                } else {
+                    displayElectionStatus(null, false);
+                }
+                
+            } catch (error) {
+                displayElectionStatus(null, false);
+            }
+        }
+
+        function displayElectionStatus(election, isActive) {
+            const statusCard = document.getElementById('electionStatusCard');
+            const electionInfo = document.getElementById('electionInfo');
+            
+            if (isActive && election) {
+                statusCard.className = 'election-status status-active';
+                electionInfo.innerHTML = `
+                    <div style="font-size: 2rem; color: var(--green); margin-bottom: 0.5rem;">🟢 Election Active</div>
+                    <h3>${election.title || 'General Election 2024'}</h3>
+                    <p style="margin: 1rem 0;">Election is currently active. You can cast your vote.</p>
+                    <p><strong>Total Candidates:</strong> ${candidates.length}</p>
+                    <button class="btn btn-primary" onclick="goToStep(3)" style="margin-top: 1rem;">
+                        Proceed to Vote →
+                    </button>
+                `;
+            } else {
+                statusCard.className = 'election-status status-inactive';
+                electionInfo.innerHTML = `
+                    <div style="font-size: 2rem; color: #dc3545; margin-bottom: 0.5rem;">🔴 Election Inactive</div>
+                    <h3>No Active Election</h3>
+                    <p style="margin: 1rem 0;">There is no active election at the moment. Please check back later.</p>
+                    <a href="/" class="btn btn-secondary" style="margin-top: 1rem;">
+                        Return Home
+                    </a>
+                `;
+            }
+        }
+
+        async function startFaceVerification() {
+            try {
+                verificationStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 400, 
+                        height: 300,
+                        facingMode: 'user'
+                    } 
+                });
+                
+                const video = document.getElementById('verificationVideo');
+                video.srcObject = verificationStream;
+                video.style.display = 'block';
+                
+                document.getElementById('cameraPlaceholder').style.display = 'none';
+                document.getElementById('startVerificationBtn').style.display = 'none';
+                document.getElementById('verifyFaceBtn').style.display = 'inline-block';
+                
+            } catch (error) {
+                alert('Camera access denied or not available');
+            }
+        }
+
+        async function verifyFace() {
+            const video = document.getElementById('verificationVideo');
+            const canvas = document.getElementById('verificationCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            const liveImage = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // Stop camera
+            if (verificationStream) {
+                verificationStream.getTracks().forEach(track => track.stop());
+                verificationStream = null;
+            }
+
+            // Show loading
+            const verifyBtn = document.getElementById('verifyFaceBtn');
+            Utils.showLoader(verifyBtn);
+            verifyBtn.textContent = 'Verifying Face...';
+
+            try {
+                // Get stored face image
+                const faceResponse = await fetch(`/api/voter/face/${voterData.aadhaar}`);
+                const faceResult = await faceResponse.json();
+                
+                if (!faceResult.success) {
+                    alert('Face verification failed: ' + faceResult.message);
+                    return;
+                }
+
+                // Simulate face verification (in production, this would call the Python script)
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                // For demo purposes, we'll assume 90% success rate
+                const isMatch = Math.random() > 0.1;
+                
+                if (isMatch) {
+                    loadCandidates();
+                    goToStep(4);
+                } else {
+                    alert('Face verification failed. Please try again.');
+                    // Reset verification
+                    document.getElementById('verificationCamera').innerHTML = `
+                        <div id="cameraPlaceholder">
+                            <div style="text-align: center; color: var(--text-light);">
+                                <div style="font-size: 3rem; margin-bottom: 1rem;">🔒</div>
+                                <p>Click "Start Verification" to begin face matching</p>
+                            </div>
+                        </div>
+                        <video id="verificationVideo" autoplay playsinline style="display: none;"></video>
+                        <canvas id="verificationCanvas" style="display: none;"></canvas>
+                    `;
+                    document.getElementById('startVerificationBtn').style.display = 'inline-block';
+                    document.getElementById('verifyFaceBtn').style.display = 'none';
+                }
+                
+            } catch (error) {
+                alert('Face verification error: ' + error.message);
+            } finally {
+                Utils.hideLoader(verifyBtn);
+                verifyBtn.textContent = '✅ Verify Face';
+            }
+        }
+
+        function loadCandidates() {
+            const candidateGrid = document.getElementById('candidateGrid');
+            candidateGrid.innerHTML = '';
+
+            candidates.forEach(candidate => {
+                const candidateCard = document.createElement('div');
+                candidateCard.className = 'candidate-card';
+                candidateCard.onclick = () => selectCandidate(candidate);
+                
+                candidateCard.innerHTML = `
+                    <div class="candidate-symbol">${candidate.symbol}</div>
+                    <div class="candidate-name">${candidate.name}</div>
+                    <div class="candidate-party">${candidate.party}</div>
+                    <button class="vote-button" onclick="event.stopPropagation(); selectCandidate(candidate)">
+                        Select Candidate
+                    </button>
+                `;
+                
+                candidateGrid.appendChild(candidateCard);
+            });
+        }
+
+        function selectCandidate(candidate) {
+            // Remove previous selection
+            document.querySelectorAll('.candidate-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+
+            // Select current candidate
+            event.currentTarget.classList.add('selected');
+            selectedCandidate = candidate;
+            
+            // Enable cast vote button
+            document.getElementById('castVoteBtn').disabled = false;
+            document.getElementById('castVoteBtn').style.opacity = '1';
+        }
+
+        async function castVote() {
+            if (!selectedCandidate) {
+                alert('Please select a candidate first');
+                return;
+            }
+
+            const castBtn = document.getElementById('castVoteBtn');
+            Utils.showLoader(castBtn);
+            castBtn.textContent = 'Casting Vote...';
+
+            try {
+                const response = await fetch('/api/voting/cast-vote', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        voterId: voterData.id,
+                        candidateId: selectedCandidate.id || selectedCandidate._id,
+                        faceImage: 'verified' // Since we already verified
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showVoteConfirmation();
+                    goToStep(5);
+                } else {
+                    alert('Vote casting failed: ' + result.message);
+                }
+
+            } catch (error) {
+                alert('Vote casting error: ' + error.message);
+            } finally {
+                Utils.hideLoader(castBtn);
+                castBtn.textContent = '🗳️ Cast Your Vote';
+            }
+        }
+
+        function showVoteConfirmation() {
+            const confirmationDiv = document.getElementById('voteConfirmation');
+            confirmationDiv.innerHTML = `
+                <h3 style="margin-bottom: 1rem; color: var(--dark-gray);">Vote Details</h3>
+                <div style="text-align: left;">
+                    <p><strong>Voter:</strong> ${voterData.name}</p>
+                    <p><strong>Candidate:</strong> ${selectedCandidate.name}</p>
+                    <p><strong>Party:</strong> ${selectedCandidate.party}</p>
+                    <p><strong>Time:</strong> ${new Date().toLocaleString('en-IN')}</p>
+                    <p><strong>Status:</strong> ✅ Verified and Recorded</p>
+                </div>
+            `;
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            
+            // Hide all steps
+            document.querySelectorAll('.voting-step').forEach(s => {
+                s.classList.remove('active');
+            });
+
+            // Show current step
+            const stepIds = ['', 'voterVerification', 'electionStatus', 'faceVerificationStep', 'ballotStep', 'confirmationStep'];
+            document.getElementById(stepIds[step]).classList.add('active');
+            
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const progress = (currentStep / 5) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+        }
+    </script>
+</body>
+</html>

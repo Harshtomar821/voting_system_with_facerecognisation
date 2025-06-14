@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Registration - Online Voting System</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, var(--green), #0f6b06);
+            color: white;
+            padding: 2rem 0;
+            text-align: center;
+        }
+        
+        .camera-container {
+            position: relative;
+            margin: 1rem 0;
+            text-align: center;
+        }
+        
+        .camera-preview {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            margin: 0 auto;
+        }
+        
+        .camera-preview video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 6px;
+        }
+        
+        .camera-preview canvas {
+            display: none;
+        }
+        
+        .camera-controls {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .preview-image {
+            max-width: 400px;
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid var(--green);
+        }
+        
+        .registration-steps {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        
+        .step {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            min-width: 200px;
+        }
+        
+        .step-number {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--saffron);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        
+        .step.completed .step-number {
+            background: var(--green);
+        }
+        
+        .step.active .step-number {
+            background: var(--saffron);
+            animation: pulse 2s infinite;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="page-header">
+        <div class="container">
+            <h1>🆔 Voter Registration</h1>
+            <p>Register to vote with Aadhaar and Face ID verification</p>
+            <a href="/" class="btn btn-secondary" style="margin-top: 1rem;">← Back to Home</a>
+        </div>
+    </header>
+
+    <!-- Registration Steps -->
+    <section class="registration-steps">
+        <div class="step active" id="step1">
+            <div class="step-number">1</div>
+            <div>
+                <h3>Personal Details</h3>
+                <p>Name & Aadhaar</p>
+            </div>
+        </div>
+        <div class="step" id="step2">
+            <div class="step-number">2</div>
+            <div>
+                <h3>Face Capture</h3>
+                <p>Take your photo</p>
+            </div>
+        </div>
+        <div class="step" id="step3">
+            <div class="step-number">3</div>
+            <div>
+                <h3>Verification</h3>
+                <p>Complete registration</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Registration Form -->
+    <section class="container" style="padding: 2rem 0;">
+        <div class="form-container">
+            <form id="registrationForm">
+                <!-- Step 1: Personal Details -->
+                <div class="form-step active" id="personalDetails">
+                    <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--green);">
+                        Personal Information
+                    </h2>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="voterName">Full Name *</label>
+                        <input 
+                            type="text" 
+                            id="voterName" 
+                            class="form-input" 
+                            placeholder="Enter your full name as per Aadhaar"
+                            required
+                        >
+                        <div class="error-message" id="nameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label" for="aadhaarNumber">Aadhaar Number *</label>
+                        <input 
+                            type="text" 
+                            id="aadhaarNumber" 
+                            class="form-input" 
+                            placeholder="XXXX XXXX XXXX"
+                            maxlength="14"
+                            required
+                        >
+                        <div class="error-message" id="aadhaarError"></div>
+                        <small style="color: var(--text-light);">
+                            Format: 1234 5678 9012 (12 digits with spaces)
+                        </small>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="goToStep2()">
+                        Next: Capture Photo →
+                    </button>
+                </div>
+
+                <!-- Step 2: Face Capture -->
+                <div class="form-step" id="faceCapture" style="display: none;">
+                    <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--green);">
+                        Face ID Registration
+                    </h2>
+                    
+                    <div class="camera-container">
+                        <div class="camera-preview" id="cameraPreview">
+                            <div id="cameraPlaceholder">
+                                <div style="text-align: center; color: var(--text-light);">
+                                    <div style="font-size: 3rem; margin-bottom: 1rem;">📷</div>
+                                    <p>Click "Start Camera" to capture your photo</p>
+                                </div>
+                            </div>
+                            <video id="cameraVideo" autoplay playsinline style="display: none;"></video>
+                            <canvas id="captureCanvas"></canvas>
+                        </div>
+                        
+                        <div class="camera-controls">
+                            <button type="button" class="btn btn-secondary" id="startCameraBtn" onclick="startCamera()">
+                                📹 Start Camera
+                            </button>
+                            <button type="button" class="btn btn-primary" id="captureBtn" onclick="captureImage()" style="display: none;">
+                                📸 Capture Photo
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="retakeBtn" onclick="retakePhoto()" style="display: none;">
+                                🔄 Retake
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="goToStep1()" style="flex: 1;">
+                            ← Back
+                        </button>
+                        <button type="button" class="btn btn-primary" id="proceedBtn" onclick="goToStep3()" style="flex: 2; display: none;">
+                            Next: Complete Registration →
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 3: Verification -->
+                <div class="form-step" id="verification" style="display: none;">
+                    <h2 style="text-align: center; margin-bottom: 1.5rem; color: var(--green);">
+                        Verify Information
+                    </h2>
+                    
+                    <div id="verificationData" style="background: var(--light-gray); padding: 1.5rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                        <!-- Verification data will be populated here -->
+                    </div>
+                    
+                    <div style="display: flex; gap: 1rem;">
+                        <button type="button" class="btn btn-secondary" onclick="goToStep2()" style="flex: 1;">
+                            ← Back
+                        </button>
+                        <button type="submit" class="btn btn-primary" style="flex: 2;" id="submitBtn">
+                            ✅ Complete Registration
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 4rem; color: var(--green); margin-bottom: 1rem;">✅</div>
+                <h2 style="color: var(--green); margin-bottom: 1rem;">Registration Successful!</h2>
+                <p style="margin-bottom: 1.5rem;">Your voter registration has been completed successfully.</p>
+                <div style="background: var(--light-gray); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem;">
+                    <strong>Voter ID: </strong><span id="voterIdDisplay"></span>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="/" class="btn btn-secondary">Home</a>
+                    <a href="/vote" class="btn btn-primary">Proceed to Vote</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        let currentStep = 1;
+        let cameraStream = null;
+        let capturedImage = null;
+
+        // Aadhaar formatting
+        document.getElementById('aadhaarNumber').addEventListener('input', function(e) {
+            e.target.value = Utils.formatAadhaar(e.target.value);
+        });
+
+        function goToStep1() {
+            showStep(1);
+        }
+
+        function goToStep2() {
+            if (!validateStep1()) return;
+            showStep(2);
+        }
+
+        function goToStep3() {
+            if (!capturedImage) {
+                alert('Please capture your photo first');
+                return;
+            }
+            populateVerification();
+            showStep(3);
+        }
+
+        function showStep(step) {
+            // Hide all steps
+            document.querySelectorAll('.form-step').forEach(s => s.style.display = 'none');
+            document.querySelectorAll('.step').forEach(s => {
+                s.classList.remove('active', 'completed');
+            });
+
+            // Show current step
+            currentStep = step;
+            
+            if (step === 1) {
+                document.getElementById('personalDetails').style.display = 'block';
+                document.getElementById('step1').classList.add('active');
+            } else if (step === 2) {
+                document.getElementById('faceCapture').style.display = 'block';
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('active');
+            } else if (step === 3) {
+                document.getElementById('verification').style.display = 'block';
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step2').classList.add('completed');
+                document.getElementById('step3').classList.add('active');
+            }
+        }
+
+        function validateStep1() {
+            const name = document.getElementById('voterName').value.trim();
+            const aadhaar = document.getElementById('aadhaarNumber').value.trim();
+
+            let isValid = true;
+
+            if (!name) {
+                document.getElementById('nameError').textContent = 'Name is required';
+                isValid = false;
+            } else {
+                document.getElementById('nameError').textContent = '';
+            }
+
+            if (!Utils.validateAadhaar(aadhaar)) {
+                document.getElementById('aadhaarError').textContent = 'Please enter valid Aadhaar number (XXXX XXXX XXXX)';
+                isValid = false;
+            } else {
+                document.getElementById('aadhaarError').textContent = '';
+            }
+
+            return isValid;
+        }
+
+        async function startCamera() {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: 400, 
+                        height: 300,
+                        facingMode: 'user'
+                    } 
+                });
+                
+                const video = document.getElementById('cameraVideo');
+                video.srcObject = cameraStream;
+                video.style.display = 'block';
+                
+                document.getElementById('cameraPlaceholder').style.display = 'none';
+                document.getElementById('startCameraBtn').style.display = 'none';
+                document.getElementById('captureBtn').style.display = 'inline-block';
+                
+            } catch (error) {
+                alert('Camera access denied or not available');
+                console.error('Camera error:', error);
+            }
+        }
+
+        function captureImage() {
+            const video = document.getElementById('cameraVideo');
+            const canvas = document.getElementById('captureCanvas');
+            const ctx = canvas.getContext('2d');
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            ctx.drawImage(video, 0, 0);
+
+            // Get base64 image data
+            capturedImage = canvas.toDataURL('image/jpeg', 0.8);
+
+            // Show captured image
+            video.style.display = 'none';
+            const img = document.createElement('img');
+            img.src = capturedImage;
+            img.className = 'preview-image';
+
+            const preview = document.getElementById('cameraPreview');
+            preview.innerHTML = '';
+            preview.appendChild(img);
+
+            // Update buttons
+            document.getElementById('captureBtn').style.display = 'none';
+            document.getElementById('retakeBtn').style.display = 'inline-block';
+            document.getElementById('proceedBtn').style.display = 'inline-block';
+
+            // Stop camera
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(track => track.stop());
+                cameraStream = null;
+            }
+        }
+
+        function retakePhoto() {
+            document.getElementById('cameraPreview').innerHTML = `
+                <div id="cameraPlaceholder">
+                    <div style="text-align: center; color: var(--text-light);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📷</div>
+                        <p>Click "Start Camera" to capture your photo</p>
+                    </div>
+                </div>
+                <video id="cameraVideo" autoplay playsinline style="display: none;"></video>
+                <canvas id="captureCanvas"></canvas>
+            `;
+            
+            document.getElementById('startCameraBtn').style.display = 'inline-block';
+            document.getElementById('retakeBtn').style.display = 'none';
+            document.getElementById('proceedBtn').style.display = 'none';
+            
+            capturedImage = null;
+        }
+
+        function populateVerification() {
+            const name = document.getElementById('voterName').value;
+            const aadhaar = document.getElementById('aadhaarNumber').value;
+
+            document.getElementById('verificationData').innerHTML = `
+                <h3 style="margin-bottom: 1rem; color: var(--dark-gray);">Please verify your information:</h3>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Name:</strong> ${name}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Aadhaar Number:</strong> ${aadhaar}
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Photo:</strong> ✅ Captured
+                </div>
+                <div style="margin-bottom: 1rem;">
+                    <strong>Registration Date:</strong> ${new Date().toLocaleDateString('en-IN')}
+                </div>
+            `;
+        }
+
+        // Form submission
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const submitBtn = document.getElementById('submitBtn');
+            Utils.showLoader(submitBtn);
+            submitBtn.textContent = 'Registering...';
+
+            const formData = {
+                name: document.getElementById('voterName').value.trim(),
+                aadhaar: document.getElementById('aadhaarNumber').value.trim(),
+                faceImage: capturedImage
+            };
+
+            try {
+                const response = await fetch('/api/voter/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    document.getElementById('voterIdDisplay').textContent = result.voterId;
+                    document.getElementById('successModal').style.display = 'flex';
+                } else {
+                    alert('Registration failed: ' + result.message);
+                }
+
+            } catch (error) {
+                alert('Registration failed: ' + error.message);
+            } finally {
+                Utils.hideLoader(submitBtn);
+                submitBtn.textContent = '✅ Complete Registration';
+            }
+        });
+
+        // Modal styles
+        const modalStyles = `
+            .modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1000;
+            }
+            .modal-content {
+                background: white;
+                border-radius: 12px;
+                max-width: 500px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            }
+        `;
+
+        // Add modal styles
+        const styleSheet = document.createElement('style');
+        styleSheet.textContent = modalStyles;
+        document.head.appendChild(styleSheet);
+    </script>
+</body>
+</html>

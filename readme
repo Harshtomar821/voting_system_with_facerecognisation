@@ -1,0 +1,118 @@
+# 🗳️ Online Voting System with Face Recognition
+
+This is a full-stack **Online Voting System** where registered voters can cast their vote securely using **face recognition**. The system ensures that one voter can vote only once, and provides real-time vote counting and results.
+
+---
+
+## 📁 Project Structure
+
+voting_system/
+├── models/ # Mongoose models: Voter, Candidate, Election, Vote
+├── routes/ # Express routes: voting.js, admin.js, etc.
+├── public/ # Frontend static files (HTML, CSS, JS)
+├── .env # Environment variables (MongoDB URI, PORT)
+├── server.js # Express server entry point
+├── README.md # Project documentation
+
+yaml
+Copy
+Edit
+
+---
+
+## 🚀 Features
+
+- ✅ Face recognition-based voting system *(demo version)*
+- ✅ One person, one vote — enforced securely
+- ✅ Admin panel to manage elections and candidates
+- ✅ Real-time vote percentage and results
+- ✅ Fallback in-memory storage for demo/testing
+- ✅ MongoDB Atlas integration for cloud data storage
+
+---
+
+## 🧰 Tech Stack
+
+- **Backend:** Node.js, Express.js  
+- **Database:** MongoDB / MongoDB Atlas  
+- **Frontend:** HTML, CSS, JavaScript  
+- **Other:** Mongoose (ODM), Axios, dotenv
+
+---
+
+## 🔐 Environment Setup
+
+Create a `.env` file in the root folder and add your MongoDB URI and Port:
+
+```env
+PORT=3000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/voting_system
+✅ Replace <username> and <password> with your MongoDB Atlas credentials.
+
+🔧 Installation & Run
+Step 1: Clone the Repository
+bash
+Copy
+Edit
+git clone https://github.com/yourusername/voting_system.git
+cd voting_system
+Step 2: Install Dependencies
+bash
+Copy
+Edit
+npm install
+Step 3: Run the Server
+bash
+Copy
+Edit
+npm start
+The server will start at: http://localhost:3000
+
+🗳️ How It Works
+User Registration (Pre-loaded or via admin)
+
+Face Image is stored in the database
+
+Voter logs in and selects a candidate
+
+Face Verification is performed
+
+If face match passes, the vote is cast and recorded
+
+📊 Results Page
+Candidates are shown with their vote count and percentage
+
+Results are auto-calculated and sorted in real time
+
+Optionally, display winner at the top
+
+🛡️ Fallback Storage (for testing)
+If MongoDB is not connected, the system uses temporary in-memory storage to simulate voting and results.
+
+🧠 Face Verification
+Current Logic: Simulated matching using random success rate (90%)
+
+Future Scope: Integrate Python-based face recognition using OpenCV or AWS Rekognition
+
+📸 Admin Panel Features
+Add/Edit/Delete candidates
+
+Activate or close elections
+
+Monitor total votes and results
+
+📌 Future Improvements
+✅ Real-time Face Recognition (OpenCV/Python)
+
+✅ Voter registration via OTP or Aadhaar
+
+✅ Fingerprint biometric option
+
+✅ Advanced dashboard for admin analytics
+
+🧑‍💻 Developer
+Harsh Tomar
+Full Stack Developer & AI Enthusiast
+📧 Email: ht3371529@gmail.com
+🔗 LinkedIn: https://www.linkedin.com/in/harsh-tomar-3087b2290/
+
